@@ -204,9 +204,12 @@ func handleSocks(clientConn net.Conn) {
 	if tnet == nil {
 		destConn, err = net.DialTimeout("tcp", dest, 15*time.Second)
 	} else {
-		// Use tnet.Dial but wrap it in a timeout if possible, 
-		// though netstack.Dial usually manages its own timeouts/retransmits
+		// Try routing via WireGuard netstack first
 		destConn, err = tnet.Dial("tcp", dest)
+		if err != nil {
+			log.Printf("[SOCKS] WireGuard dial failed to %s: %v, falling back to direct connection", dest, err)
+			destConn, err = net.DialTimeout("tcp", dest, 15*time.Second)
+		}
 	}
 
 	if err != nil {
