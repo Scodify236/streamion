@@ -32,7 +32,7 @@ echo "[ENTRYPOINT] Waiting for WireGuard tunnel to stabilize..."
 sleep 5
 
 echo "[ENTRYPOINT] Testing tunnel connectivity..."
-TRACE=$(curl -s --max-time 10 --socks5 127.0.0.1:1080 https://cloudflare.com/cdn-cgi/trace 2>&1)
+TRACE=$(curl -s --max-time 5 --socks5 127.0.0.1:1080 https://cloudflare.com/cdn-cgi/trace 2>&1 || true)
 if echo "$TRACE" | grep -q "ip="; then
     echo "[ENTRYPOINT] Tunnel OK — proxy IP info:"
     echo "$TRACE" | grep -E "ip=|loc=|warp="
