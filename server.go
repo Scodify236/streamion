@@ -90,6 +90,7 @@ func startWireGuard(cfg params) error {
 public_key=%s
 endpoint=%s
 allowed_ip=0.0.0.0/0
+persistent_keepalive_interval=25
 `, privateKeyHex, publicKeyHex, cfg.WgPeerEndpoint)
 
 	if err := dev.IpcSet(uapi); err != nil {
