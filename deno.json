@@ -8,7 +8,7 @@
     "lint": "deno lint src/**"
   },
   "imports": {
-    "@std/cli": "jsr:@std/cli@^1.0.17",
+    "@std/cli": "jsr:@std/cli@^1.0.32",
     "hono": "jsr:@hono/hono@4.7.4",
     "@std/toml": "jsr:@std/toml@1.0.2",
     "prom-client": "https://esm.sh/prom-client@15.1.3?pin=v135",

@@ -6,13 +6,17 @@ echo "[ENTRYPOINT] Starting WireGuard SOCKS5 Proxy"
 if [[ -z "${WIREGUARD_INTERFACE_PRIVATE_KEY}" ]]; then
     echo "[ENTRYPOINT] Generating Cloudflare Warp configuration..."
     
-    if WARP_OUTPUT=$(warp 2>/dev/null); then
+    if WARP_ENV=$(deno run --allow-net src/lib/helpers/generateWarpKeys.ts 2>/dev/null); then
+        eval "$WARP_ENV"
+        export WIREGUARD_INTERFACE_DNS="${WIREGUARD_INTERFACE_DNS:-1.1.1.1}"
+        echo "[ENTRYPOINT] Cloudflare Warp config generated successfully via Deno"
+    elif WARP_OUTPUT=$(warp 2>/dev/null); then
         export WIREGUARD_INTERFACE_PRIVATE_KEY=$(echo "$WARP_OUTPUT" | grep "PrivateKey" | awk '{print $3}')
         export WIREGUARD_INTERFACE_ADDRESS=$(echo "$WARP_OUTPUT" | grep "Address" | awk '{print $3}')
         export WIREGUARD_PEER_PUBLIC_KEY=$(echo "$WARP_OUTPUT" | grep "PublicKey" | awk '{print $3}')
         export WIREGUARD_PEER_ENDPOINT=$(echo "$WARP_OUTPUT" | grep "Endpoint" | awk '{print $3}')
         export WIREGUARD_INTERFACE_DNS="${WIREGUARD_INTERFACE_DNS:-1.1.1.1}"
-        echo "[ENTRYPOINT] Warp config generated successfully"
+        echo "[ENTRYPOINT] Warp config generated successfully via warp binary"
     else
         echo "[WARN] Cloudflare Warp registration failed. Falling back to DIRECT mode."
     fi
