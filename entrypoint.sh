@@ -31,10 +31,7 @@ SERVER_PID=$!
 echo "[ENTRYPOINT] Waiting for WireGuard tunnel to stabilize..."
 sleep 5
 
-echo "[ENTRYPOINT] Setting proxy environment..."
-export ALL_PROXY=socks5://127.0.0.1:1080
-export HTTPS_PROXY=socks5://127.0.0.1:1080
-export HTTP_PROXY=socks5://127.0.0.1:1080
+echo "[ENTRYPOINT] SOCKS5 proxy running on 127.0.0.1:1080"
 
 echo "[ENTRYPOINT] Starting Streamion..."
 exec deno run --v8-flags=--max-old-space-size=256 --allow-import=github.com:443,jsr.io:443,cdn.jsdelivr.net:443,esm.sh:443,deno.land:443 --allow-net --allow-env --allow-sys=hostname --allow-read=.,/var/tmp/youtubei.js,/tmp/invidious-companion.sock,/tmp/mp3-downloads --allow-write=/var/tmp/youtubei.js,/tmp/invidious-companion.sock,/tmp/mp3-downloads --allow-run=ffmpeg src/main.ts
