@@ -204,10 +204,20 @@ func handleSocks(clientConn net.Conn) {
 	if tnet == nil {
 		destConn, err = net.DialTimeout("tcp", dest, 15*time.Second)
 	} else {
-		// Try routing via WireGuard netstack first
-		destConn, err = tnet.Dial("tcp", dest)
+		// Resolve domain locally to avoid WireGuard netstack DNS UDP lookup timeouts
+		targetAddr := dest
+		host, portStr, splitErr := net.SplitHostPort(dest)
+		if splitErr == nil && net.ParseIP(host) == nil {
+			ips, lookupErr := net.LookupHost(host)
+			if lookupErr == nil && len(ips) > 0 {
+				targetAddr = net.JoinHostPort(ips[0], portStr)
+			}
+		}
+
+		// Try routing via WireGuard netstack first using resolved IP address
+		destConn, err = tnet.Dial("tcp", targetAddr)
 		if err != nil {
-			log.Printf("[SOCKS] WireGuard dial failed to %s: %v, falling back to direct connection", dest, err)
+			log.Printf("[SOCKS] WireGuard dial failed to %s (%s): %v, falling back to direct connection", dest, targetAddr, err)
 			destConn, err = net.DialTimeout("tcp", dest, 15*time.Second)
 		}
 	}
