@@ -214,11 +214,28 @@ func handleSocks(clientConn net.Conn) {
 			}
 		}
 
-		// Try routing via WireGuard netstack first using resolved IP address
-		destConn, err = tnet.Dial("tcp", targetAddr)
+		// Try routing via WireGuard netstack with 3s timeout channel
+		type dialResult struct {
+			c net.Conn
+			e error
+		}
+		ch := make(chan dialResult, 1)
+		go func() {
+			c, e := tnet.Dial("tcp", targetAddr)
+			ch <- dialResult{c: c, e: e}
+		}()
+
+		select {
+		case res := <-ch:
+			destConn = res.c
+			err = res.e
+		case <-time.After(3 * time.Second):
+			err = fmt.Errorf("wireguard dial timed out after 3s")
+		}
+
 		if err != nil {
 			log.Printf("[SOCKS] WireGuard dial failed to %s (%s): %v, falling back to direct connection", dest, targetAddr, err)
-			destConn, err = net.DialTimeout("tcp", dest, 15*time.Second)
+			destConn, err = net.DialTimeout("tcp", dest, 10*time.Second)
 		}
 	}
 
