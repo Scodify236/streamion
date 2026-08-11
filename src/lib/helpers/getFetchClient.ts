@@ -25,8 +25,12 @@ export const getFetchClient = (config: Config): {
             : config.networking.proxy;
         const ipv6Block = config.networking.ipv6_block;
 
+        // Do not route static asset/CDN dependencies (e.g. jsdelivr, jsr) through SOCKS proxy
+        const targetUrlString = typeof input === "string" ? input : (input instanceof Request ? input.url : String(input));
+        const isCdnAsset = targetUrlString.includes("cdn.jsdelivr.net") || targetUrlString.includes("jsr.io") || targetUrlString.includes("esm.sh");
+
         // If proxy or IPv6 rotation is configured, create a custom HTTP client
-        if (proxyAddress || ipv6Block) {
+        if ((proxyAddress || ipv6Block) && !isCdnAsset) {
             const clientOptions: Deno.CreateHttpClientOptions = {};
 
             if (proxyAddress) {
