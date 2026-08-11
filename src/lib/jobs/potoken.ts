@@ -150,23 +150,25 @@ async function checkToken({
 
     try {
         console.log("[INFO] Searching for videos to validate PO token");
-        const searchResults = await instantiatedInnertubeClient.search("news", {
-            type: "video",
-            upload_date: "week",
-            duration: "medium",
-        });
-
-        // Get all videos that have an id property and shuffle them randomly
-        const videos = searchResults.videos
-            .filter((video) =>
-                video.type === "Video" && "id" in video && video.id
-            )
-            .map((value) => ({ value, sort: Math.random() }))
-            .sort((a, b) => a.sort - b.sort)
-            .map(({ value }) => value);
+        let videos: any[] = [];
+        try {
+            const searchResults = await instantiatedInnertubeClient.search("news", {
+                type: "video",
+            });
+            videos = searchResults.videos
+                .filter((video) =>
+                    video.type === "Video" && "id" in video && video.id
+                )
+                .map((value) => ({ value, sort: Math.random() }))
+                .sort((a, b) => a.sort - b.sort)
+                .map(({ value }) => value);
+        } catch (searchErr) {
+            console.log("[WARN] Search method for PO token validation failed, falling back to direct video test", { searchErr });
+        }
 
         if (videos.length === 0) {
-            throw new Error("No videos with valid IDs found in search results");
+            console.log("[INFO] No search videos found, using default fallback video list for PO token validation");
+            videos = [{ id: "dQw4w9WgXcQ" }, { id: "9bZkp7q19f0" }, { id: "kJQP7kiw5Fk" }];
         }
 
         // Try up to 3 random videos to validate the token
