@@ -48,19 +48,27 @@ export const youtubePlayerReq = async (
 ): Promise<ApiResponse> => {
     const innertubeClientOauthEnabled = config.youtube_session.oauth_enabled;
 
-    let innertubeClientUsed = "WEB";
-    if (innertubeClientOauthEnabled) {
-        innertubeClientUsed = "TV";
-    }
+    let innertubeClientUsed = innertubeClientOauthEnabled ? "TV" : "TV_EMBEDDED";
 
     const contentPoToken = await tokenMinter(videoId);
 
-    const youtubePlayerResponse = await callWatchEndpoint(
-        videoId,
-        innertubeClient,
-        innertubeClientUsed,
-        contentPoToken,
-    );
+    let youtubePlayerResponse: ApiResponse;
+    try {
+        youtubePlayerResponse = await callWatchEndpoint(
+            videoId,
+            innertubeClient,
+            "WEB",
+            contentPoToken,
+        );
+    } catch (_err) {
+        console.log("[INFO] WEB watch endpoint blocked by YouTube, falling back to TV_EMBEDDED client");
+        youtubePlayerResponse = await callWatchEndpoint(
+            videoId,
+            innertubeClient,
+            innertubeClientUsed,
+            contentPoToken,
+        );
+    }
 
     // Check if the first adaptive format URL is undefined, if it is then fallback to multiple YT clients
 
