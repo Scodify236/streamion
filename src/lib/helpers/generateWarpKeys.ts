@@ -42,7 +42,12 @@ const patchRes = await fetch(`https://api.cloudflareclient.com/v0i2003111800/reg
 
 const patchData = await patchRes.json();
 
+let peerEndpoint = patchData.result.config.peers[0].endpoint?.v4 || patchData.result.config.peers[0].endpoint?.host || "162.159.192.1:2408";
+if (peerEndpoint.endsWith(":0")) {
+    peerEndpoint = peerEndpoint.replace(":0", ":2408");
+}
+
 console.log(`export WIREGUARD_INTERFACE_PRIVATE_KEY="${b64Key}"`);
 console.log(`export WIREGUARD_INTERFACE_ADDRESS="${patchData.result.config.interface.addresses.v4}/32"`);
 console.log(`export WIREGUARD_PEER_PUBLIC_KEY="${patchData.result.config.peers[0].public_key}"`);
-console.log(`export WIREGUARD_PEER_ENDPOINT="162.159.192.5:2408"`);
+console.log(`export WIREGUARD_PEER_ENDPOINT="${peerEndpoint}"`);
