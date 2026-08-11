@@ -58,15 +58,21 @@ export const getFetchClient = (config: Config): {
             }
 
             const client = Deno.createHttpClient(clientOptions);
-            const fetchRes = await fetchShim(config, input, {
-                client,
-                headers: init?.headers,
-                method: init?.method,
-                body: init?.body,
-            });
+            let fetchRes: Response;
+            try {
+                fetchRes = await fetchShim(config, input, {
+                    client,
+                    headers: init?.headers,
+                    method: init?.method,
+                    body: init?.body,
+                });
+            } catch (err) {
+                try { client.close(); } catch { }
+                throw err;
+            }
 
             if (!fetchRes.body) {
-                client.close();
+                try { client.close(); } catch { }
                 return new Response(null, {
                     status: fetchRes.status,
                     headers: fetchRes.headers,

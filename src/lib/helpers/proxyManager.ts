@@ -104,21 +104,23 @@ async function testProxyAgainstYouTube(proxyUrl: string): Promise<number | boole
 
         const client = Deno.createHttpClient(clientOptions);
 
-        const response = await fetch(YOUTUBE_TEST_URL, {
-            client,
-            signal: AbortSignal.timeout(15000), // 15 second timeout for test
-            headers: {
-                "User-Agent": USER_AGENT,
-            },
-        });
+        try {
+            const response = await fetch(YOUTUBE_TEST_URL, {
+                client,
+                signal: AbortSignal.timeout(15000), // 15 second timeout for test
+                headers: {
+                    "User-Agent": USER_AGENT,
+                },
+            });
 
-        client.close();
-
-        // YouTube should return 200 or a redirect (3xx)
-        if (response.ok || (response.status >= 300 && response.status < 400)) {
-            return true;
+            // YouTube should return 200 or a redirect (3xx)
+            if (response.ok || (response.status >= 300 && response.status < 400)) {
+                return true;
+            }
+            return response.status;
+        } finally {
+            try { client.close(); } catch { }
         }
-        return response.status;
     } catch (err) {
         // console.error("[ProxyManager] Proxy test failed:", err); // Verified by user request to just move to next
         return false;
